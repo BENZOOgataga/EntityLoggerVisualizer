@@ -253,9 +253,11 @@ hr {
   margin-top: 0;
   color: #e0e6e6;
   width: 100%;
-  max-width: 480px;
+  max-width: 600px; /* Increased from 480px for more width */
   margin-left: auto;
   margin-right: auto;
+  padding-left: 1.5em;
+  padding-right: 1.5em;
 }
 .welcome .fa {
   font-size: 3em;
@@ -272,6 +274,9 @@ hr {
   opacity: 0.85;
   font-size: 1.1em;
   margin-bottom: 2em;
+  line-height: 1.7;
+  word-break: normal;
+  white-space: normal;
 }
 
 /*# sourceMappingURL=main.css.map */

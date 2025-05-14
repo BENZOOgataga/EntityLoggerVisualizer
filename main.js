@@ -13,7 +13,7 @@ function createWelcome() {
           Upload one or more <b>Pegasus EntityLogger</b> CSV files.<br>
           These are generated every 2 minutes by the Pegasus mod for Minecraft Forge 1.20.1.<br>
           Drag and drop files, or click below to select.<br><br>
-          <span style="font-size:0.95em;opacity:0.7;">(Use <code>/forcelogs</code> in-game to generate a file instantly)</span>
+          <span style="font-size:0.95em;opacity:0.7;">(Use <code>/pegasus forcelogs</code> in-game to generate a file instantly)</span>
         </p>
         <div class="upload-area" id="upload-area">
           <input type="file" id="file-input" multiple accept=".csv" style="display:none;" />
