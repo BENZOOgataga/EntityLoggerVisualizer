@@ -198,6 +198,23 @@ function renderFiles(fileDataArr, sessionState) {
   app.classList.add('visualizer-mode');
   loadedFiles = fileDataArr;
   app.innerHTML = '';
+  // --- Add Reset Button ---
+  const resetDiv = document.createElement('div');
+  resetDiv.style.display = 'flex';
+  resetDiv.style.justifyContent = 'center';
+  resetDiv.style.margin = '2em 0 1em 0';
+  resetDiv.innerHTML = `
+    <button class="animated-btn upload-btn-centered" id="reset-btn" style="margin-bottom:0;background:#232a2d;color:#e0e6e6;">
+      <i class="fa fa-arrow-left"></i>
+      <span style="margin-left:0.5em;">Back to Home</span>
+    </button>
+  `;
+  app.appendChild(resetDiv);
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    clearSession();
+    renderWelcome();
+  });
+
   // Add 'Add More Files' button
   const addFilesDiv = document.createElement('div');
   addFilesDiv.style.display = 'flex';
