@@ -58,6 +58,8 @@ function handleFiles(fileList) {
   parseFiles(files);
 }
 
+let loadedFiles = [];
+
 function parseFiles(files) {
   let parsedResults = [];
   let filesProcessed = 0;
@@ -66,7 +68,7 @@ function parseFiles(files) {
       complete: results => {
         parsedResults.push({
           name: file.name,
-          data: results.data.filter(row => row.length > 1)
+          data: results.data.filter((row, idx) => idx > 0 && row.length > 1) // skip first line
         });
         filesProcessed++;
         if (filesProcessed === files.length) {
@@ -78,6 +80,35 @@ function parseFiles(files) {
         filesProcessed++;
         if (filesProcessed === files.length) {
           renderFiles(parsedResults);
+        }
+      }
+    });
+  });
+}
+
+function handleAddFiles(fileList) {
+  const files = Array.from(fileList).filter(f => f.name.endsWith('.csv'));
+  if (!files.length) return;
+  let parsedResults = [];
+  let filesProcessed = 0;
+  files.forEach(file => {
+    Papa.parse(file, {
+      complete: results => {
+        parsedResults.push({
+          name: file.name,
+          data: results.data.filter((row, idx) => idx > 0 && row.length > 1) // skip first line
+        });
+        filesProcessed++;
+        if (filesProcessed === files.length) {
+          // Merge with loadedFiles
+          renderFiles(loadedFiles.concat(parsedResults));
+        }
+      },
+      error: err => {
+        alert('Error parsing ' + file.name + ': ' + err.message);
+        filesProcessed++;
+        if (filesProcessed === files.length) {
+          renderFiles(loadedFiles.concat(parsedResults));
         }
       }
     });
@@ -111,7 +142,28 @@ function groupEntities(rows) {
 }
 
 function renderFiles(fileDataArr) {
+  loadedFiles = fileDataArr;
   app.innerHTML = '';
+  // Add 'Add More Files' button
+  const addFilesDiv = document.createElement('div');
+  addFilesDiv.style.display = 'flex';
+  addFilesDiv.style.justifyContent = 'center';
+  addFilesDiv.style.margin = '2em 0 1em 0';
+  addFilesDiv.innerHTML = `
+    <button class="animated-btn upload-btn-centered" id="add-files-btn" style="margin-bottom:0;">
+      <i class="fa fa-plus"></i>
+      <span style="margin-left:0.5em;">Add More Files</span>
+    </button>
+    <input type="file" id="add-files-input" multiple accept=".csv" style="display:none;" />
+  `;
+  app.appendChild(addFilesDiv);
+  document.getElementById('add-files-btn').addEventListener('click', () => {
+    document.getElementById('add-files-input').click();
+  });
+  document.getElementById('add-files-input').addEventListener('change', e => {
+    handleAddFiles(e.target.files);
+  });
+
   fileDataArr.sort((a, b) => a.name.localeCompare(b.name));
   fileDataArr.forEach((fileData, idx) => {
     const tps = extractTPS(fileData.data);
