@@ -164,6 +164,32 @@ function renderFiles(fileDataArr) {
     handleAddFiles(e.target.files);
   });
 
+  // If multiple files, add a merge button
+  if (fileDataArr.length > 1) {
+    const mergeDiv = document.createElement('div');
+    mergeDiv.style.display = 'flex';
+    mergeDiv.style.justifyContent = 'center';
+    mergeDiv.style.margin = '0 0 2em 0';
+    mergeDiv.innerHTML = `
+      <button class="animated-btn upload-btn-centered" id="merge-files-btn" style="background:linear-gradient(90deg,#6ee7b7 60%,#60a5fa 100%);color:#1e2527;">
+        <i class="fa fa-layer-group"></i>
+        <span style="margin-left:0.5em;">Merge All Files</span>
+      </button>
+    `;
+    app.appendChild(mergeDiv);
+    document.getElementById('merge-files-btn').addEventListener('click', () => {
+      // Merge all entity rows from all files
+      let mergedRows = [];
+      fileDataArr.forEach(f => mergedRows = mergedRows.concat(f.data));
+      // Use the name of the first file + ' (merged)'
+      const mergedFile = [{
+        name: fileDataArr[0].name + ' (merged)',
+        data: mergedRows
+      }];
+      renderFiles(mergedFile);
+    });
+  }
+
   fileDataArr.sort((a, b) => a.name.localeCompare(b.name));
   fileDataArr.forEach((fileData, idx) => {
     const tps = extractTPS(fileData.data);
