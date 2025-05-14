@@ -60,6 +60,7 @@ function clearSession() {
 }
 
 function renderWelcome() {
+  app.classList.remove('visualizer-mode');
   app.innerHTML = createWelcome();
   const uploadArea = document.getElementById('upload-area');
   const fileInput = document.getElementById('file-input');
@@ -194,6 +195,7 @@ function groupEntities(rows) {
 }
 
 function renderFiles(fileDataArr, sessionState) {
+  app.classList.add('visualizer-mode');
   loadedFiles = fileDataArr;
   app.innerHTML = '';
   // Add 'Add More Files' button

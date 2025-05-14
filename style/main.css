@@ -12,10 +12,49 @@ body {
   -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+}
+
+#welcome-outer {
+  flex: 1 0 auto;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  padding-bottom: 0;
+}
+
+.welcome {
+  text-align: center;
+  color: #e0e6e6;
+  width: 100%;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5em;
+  padding-right: 1.5em;
+  margin-top: 0;
+  margin-bottom: 0;
+  max-height: none;
+  overflow: visible;
+}
+
+footer {
+  flex-shrink: 0;
+  width: 100%;
+  text-align: center;
+  padding: 1.5em 0 2.5em 0;
+  font-size: 1em;
+  opacity: 0.8;
+  letter-spacing: 0.01em;
+  background: transparent;
+  position: relative;
+  bottom: 0;
+  margin-top: 0;
 }
 
 #app {
@@ -24,20 +63,15 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 0;
+  min-height: auto;
+  width: 100%;
 }
 
-footer {
-  flex-shrink: 0;
-  width: 100%;
-  text-align: center;
-  padding: 1.5em 0 2.5em 0; /* Increased bottom padding for visibility above taskbar */
-  font-size: 1em;
-  opacity: 0.8;
-  letter-spacing: 0.01em;
-  background: transparent;
-  position: relative;
-  bottom: 0;
+#app.visualizer-mode {
+  justify-content: flex-start;
+  align-items: stretch;
+  min-height: unset;
+  height: auto;
 }
 
 * {
@@ -377,49 +411,3 @@ button#restore-session-btn, button#clear-session-btn {
   min-width: 160px;
   margin: 0 0.5em;
 }
-
-#welcome-outer {
-  width: 100vw;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  max-height: 100vh;
-  overflow: auto;
-}
-
-.welcome {
-  text-align: center;
-  margin-top: 0;
-  color: #e0e6e6;
-  width: 100%;
-  max-width: 600px; /* Increased from 480px for more width */
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1.5em;
-  padding-right: 1.5em;
-  max-height: 100vh;
-  overflow: auto;
-}
-.welcome .fa {
-  font-size: 3em;
-  color: #60a5fa;
-  margin-bottom: 0.5em;
-}
-.welcome h1 {
-  font-size: 2em;
-  margin-bottom: 0.5em;
-  color: #60a5fa;
-}
-.welcome p {
-  color: #e0e6e6;
-  opacity: 0.85;
-  font-size: 1.1em;
-  margin-bottom: 2em;
-  line-height: 1.7;
-  word-break: normal;
-  white-space: normal;
-}
-
-/*# sourceMappingURL=main.css.map */
