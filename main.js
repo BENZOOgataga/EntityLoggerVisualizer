@@ -7,7 +7,7 @@ function createWelcome() {
   return `
     <div id="welcome-outer">
       <div class="welcome">
-        <div><i class="fa fa-cube"></i></div>
+        <div class="welcome-logo"><img src="assets/logo_no_background.png" alt="Pegasus Logo" style="width:3em;height:3em;object-fit:contain;vertical-align:middle;" /></div>
         <h1>Pegasus EntityLogger Visualizer</h1>
         <p>
           Upload one or more <b>Pegasus EntityLogger</b> CSV files.<br>
