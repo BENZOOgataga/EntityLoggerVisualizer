@@ -28,6 +28,37 @@ function createWelcome() {
   `;
 }
 
+// --- Utility: Debounce ---
+function debounce(fn, delay) {
+  let t;
+  return function(...args) {
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+// --- Utility: Parse timestamp from filename ---
+function parseTimestamp(filename) {
+  // Example: EntityLog_2025-05-14_12-22.csv
+  const match = filename.match(/(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2})/);
+  if (match) {
+    return new Date(match[1] + 'T' + match[2].replace('-', ':'));
+  }
+  return null;
+}
+
+// --- Utility: Save/Load session ---
+function saveSession(state) {
+  localStorage.setItem('pegasus_entitylogger_session', JSON.stringify(state));
+}
+function loadSession() {
+  const s = localStorage.getItem('pegasus_entitylogger_session');
+  return s ? JSON.parse(s) : null;
+}
+function clearSession() {
+  localStorage.removeItem('pegasus_entitylogger_session');
+}
+
 function renderWelcome() {
   app.innerHTML = createWelcome();
   const uploadArea = document.getElementById('upload-area');
@@ -50,6 +81,27 @@ function renderWelcome() {
   fileInput.addEventListener('change', e => {
     handleFiles(e.target.files);
   });
+
+  // Add Restore/Clear session if available
+  const session = loadSession();
+  if (session) {
+    const restoreDiv = document.createElement('div');
+    restoreDiv.style.display = 'flex';
+    restoreDiv.style.justifyContent = 'center';
+    restoreDiv.style.margin = '2em 0 0 0';
+    restoreDiv.innerHTML = `
+      <button class="animated-btn upload-btn-centered" id="restore-session-btn"><i class="fa fa-history"></i> Restore Last Session</button>
+      <button class="animated-btn upload-btn-centered" id="clear-session-btn" style="margin-left:1em;background:#232a2d;color:#e0e6e6;"><i class="fa fa-trash"></i> Clear Session</button>
+    `;
+    app.appendChild(restoreDiv);
+    document.getElementById('restore-session-btn').onclick = () => {
+      renderFiles(session.files, session);
+    };
+    document.getElementById('clear-session-btn').onclick = () => {
+      clearSession();
+      renderWelcome();
+    };
+  }
 }
 
 function handleFiles(fileList) {
@@ -141,7 +193,7 @@ function groupEntities(rows) {
   return Object.values(groups).sort((a, b) => b.total - a.total);
 }
 
-function renderFiles(fileDataArr) {
+function renderFiles(fileDataArr, sessionState) {
   loadedFiles = fileDataArr;
   app.innerHTML = '';
   // Add 'Add More Files' button
@@ -207,6 +259,17 @@ function renderFiles(fileDataArr) {
     });
   }
 
+  // Save session on every render
+  saveSession({
+    files: loadedFiles,
+    // TODO: add expanded/collapsed, search/filter state
+  });
+
+  // --- Timeline Graphs ---
+  if (fileDataArr.length > 1 && fileDataArr.some(f => parseTimestamp(f.name))) {
+    renderTimelineSection(fileDataArr);
+  }
+
   fileDataArr.sort((a, b) => a.name.localeCompare(b.name));
   fileDataArr.forEach((fileData, idx) => {
     const tps = extractTPS(fileData.data);
@@ -214,12 +277,24 @@ function renderFiles(fileDataArr) {
     // --- Search bar ---
     const section = document.createElement('section');
     section.className = 'file-section';
+    // --- Coordinate Filter Bar ---
+    const coordFilterBar = `
+      <div class="coord-filter-bar">
+        <input type="number" class="coord-input" data-file-idx="${idx}" data-coord="xmin" placeholder="X min" />
+        <input type="number" class="coord-input" data-file-idx="${idx}" data-coord="xmax" placeholder="X max" />
+        <input type="number" class="coord-input" data-file-idx="${idx}" data-coord="ymin" placeholder="Y min" />
+        <input type="number" class="coord-input" data-file-idx="${idx}" data-coord="ymax" placeholder="Y max" />
+        <input type="number" class="coord-input" data-file-idx="${idx}" data-coord="zmin" placeholder="Z min" />
+        <input type="number" class="coord-input" data-file-idx="${idx}" data-coord="zmax" placeholder="Z max" />
+      </div>
+    `;
     section.innerHTML = `
       <div class="file-header" data-idx="${idx}">
         <span class="filename"><i class="fa fa-file-csv"></i> ${fileData.name}</span>
         <span class="tps">TPS: <b>${tps}</b></span>
         <span class="toggle-btn" style="margin-left:auto;cursor:pointer;" title="Collapse"><i class="fa fa-chevron-up"></i></span>
       </div>
+      ${coordFilterBar}
       <div class="search-bar">
         <input type="text" placeholder="Search entities..." data-file-idx="${idx}" class="entity-search-input" autocomplete="off" />
       </div>
@@ -230,7 +305,7 @@ function renderFiles(fileDataArr) {
             <span>x${g.total} <i class="fa fa-chevron-down" style="margin-left:0.5em;font-size:0.9em;"></i></span>
             <div class="entity-details" id="details-${idx}-${i}">
               <ul>
-                ${g.coords.map(c => `<li>${c.dimension} @ (${c.x}, ${c.y}, ${c.z}) <span style="opacity:0.7;">x${c.quantity}</span></li>`).join('')}
+                ${g.coords.map(c => `<li class="coord-li" data-x="${c.x}" data-y="${c.y}" data-z="${c.z}">${c.dimension} @ (${c.x}, ${c.y}, ${c.z}) <span style="opacity:0.7;">x${c.quantity}</span></li>`).join('')}
               </ul>
             </div>
           </li>
@@ -242,6 +317,200 @@ function renderFiles(fileDataArr) {
   addFileSectionInteractivity();
   addEntityGroupInteractivity();
   addEntitySearchInteractivity();
+  addCoordFilterInteractivity();
+}
+
+// --- Coordinate Filter Interactivity ---
+function addCoordFilterInteractivity() {
+  const debounceFilter = debounce(function(idx) {
+    const xMin = parseFloat(document.querySelector(`.coord-input[data-file-idx="${idx}"][data-coord="xmin"]`).value);
+    const xMax = parseFloat(document.querySelector(`.coord-input[data-file-idx="${idx}"][data-coord="xmax"]`).value);
+    const yMin = parseFloat(document.querySelector(`.coord-input[data-file-idx="${idx}"][data-coord="ymin"]`).value);
+    const yMax = parseFloat(document.querySelector(`.coord-input[data-file-idx="${idx}"][data-coord="ymax"]`).value);
+    const zMin = parseFloat(document.querySelector(`.coord-input[data-file-idx="${idx}"][data-coord="zmin"]`).value);
+    const zMax = parseFloat(document.querySelector(`.coord-input[data-file-idx="${idx}"][data-coord="zmax"]`).value);
+    const list = document.getElementById('entity-list-' + idx);
+    if (!list) return;
+    Array.from(list.children).forEach(li => {
+      let show = false;
+      const coordLis = li.querySelectorAll('.coord-li');
+      coordLis.forEach(cl => {
+        const x = parseFloat(cl.getAttribute('data-x'));
+        const y = parseFloat(cl.getAttribute('data-y'));
+        const z = parseFloat(cl.getAttribute('data-z'));
+        let match = true;
+        if (!isNaN(xMin) && x < xMin) match = false;
+        if (!isNaN(xMax) && x > xMax) match = false;
+        if (!isNaN(yMin) && y < yMin) match = false;
+        if (!isNaN(yMax) && y > yMax) match = false;
+        if (!isNaN(zMin) && z < zMin) match = false;
+        if (!isNaN(zMax) && z > zMax) match = false;
+        if (match) {
+          show = true;
+          cl.classList.add('coord-match');
+          cl.classList.remove('coord-dim');
+        } else {
+          cl.classList.remove('coord-match');
+          cl.classList.add('coord-dim');
+        }
+      });
+      li.style.display = show ? '' : 'none';
+    });
+  }, 200);
+  document.querySelectorAll('.coord-input').forEach(input => {
+    input.addEventListener('input', function() {
+      const idx = this.getAttribute('data-file-idx');
+      debounceFilter(idx);
+    });
+  });
+}
+
+// --- Heatmap Interactivity ---
+function addHeatmapInteractivity() {
+  document.querySelectorAll('.heatmap-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const idx = this.getAttribute('data-file-idx');
+      const container = document.getElementById('heatmap-canvas-container-' + idx);
+      if (container.style.display === 'none') {
+        renderHeatmap(idx, container);
+        container.style.display = '';
+      } else {
+        container.style.display = 'none';
+        container.innerHTML = '';
+      }
+    });
+  });
+}
+
+function renderHeatmap(idx, container) {
+  // Get all entity coords for this file
+  const file = loadedFiles[idx];
+  const entities = groupEntities(file.data);
+  // Collect all coords by dimension
+  const dims = {};
+  entities.forEach(g => {
+    g.coords.forEach(c => {
+      if (!dims[c.dimension]) dims[c.dimension] = [];
+      dims[c.dimension].push({ x: parseFloat(c.x), z: parseFloat(c.z), name: g.name, type: g.type, quantity: parseInt(c.quantity||'1',10) });
+    });
+  });
+  // Dimension selector
+  const dimKeys = Object.keys(dims);
+  let selectedDim = dimKeys[0];
+  container.innerHTML = `<div style="margin-bottom:0.5em;">
+    <label style="margin-right:0.7em;">Dimension:</label>
+    <select id="heatmap-dim-select-${idx}">
+      ${dimKeys.map(d => `<option value="${d}">${d}</option>`).join('')}
+    </select>
+  </div>
+  <canvas id="heatmap-canvas-${idx}" width="420" height="320" style="background:#1e2527;border-radius:8px;"></canvas>`;
+  document.getElementById(`heatmap-dim-select-${idx}`).addEventListener('change', function() {
+    selectedDim = this.value;
+    drawHeatmapCanvas(idx, dims[selectedDim], `heatmap-canvas-${idx}`);
+  });
+  drawHeatmapCanvas(idx, dims[selectedDim], `heatmap-canvas-${idx}`);
+}
+
+function drawHeatmapCanvas(idx, points, canvasId) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if (!points || !points.length) return;
+  // Find bounds
+  let minX = Math.min(...points.map(p=>p.x)), maxX = Math.max(...points.map(p=>p.x));
+  let minZ = Math.min(...points.map(p=>p.z)), maxZ = Math.max(...points.map(p=>p.z));
+  if (minX === maxX) { minX -= 10; maxX += 10; }
+  if (minZ === maxZ) { minZ -= 10; maxZ += 10; }
+  // Draw points as density blobs
+  points.forEach(p => {
+    const px = ((p.x-minX)/(maxX-minX))*canvas.width;
+    const pz = ((p.z-minZ)/(maxZ-minZ))*canvas.height;
+    const r = Math.max(3, Math.log2(p.quantity+1)*3);
+    const grad = ctx.createRadialGradient(px,pz,1,px,pz,r);
+    grad.addColorStop(0, 'rgba(96,165,250,0.7)');
+    grad.addColorStop(1, 'rgba(96,0,250,0.05)');
+    ctx.beginPath();
+    ctx.arc(px,pz,r,0,2*Math.PI);
+    ctx.fillStyle = grad;
+    ctx.fill();
+  });
+}
+
+// --- Timeline Section ---
+function renderTimelineSection(fileDataArr) {
+  // Parse timestamps and TPS
+  const timelineData = fileDataArr.map(f => {
+    const ts = parseTimestamp(f.name);
+    return {
+      name: f.name,
+      ts,
+      tps: parseFloat(extractTPS(f.data)),
+      entities: groupEntities(f.data)
+    };
+  }).filter(d => d.ts);
+  if (!timelineData.length) return;
+  timelineData.sort((a,b)=>a.ts-b.ts);
+  // TPS chart
+  const timelineDiv = document.createElement('div');
+  timelineDiv.className = 'timeline-section';
+  timelineDiv.innerHTML = `
+    <h2 style="text-align:center;margin-bottom:0.5em;">Timeline</h2>
+    <canvas id="timeline-tps-chart" width="600" height="180"></canvas>
+    <canvas id="timeline-entity-chart" width="600" height="220" style="margin-top:1.5em;"></canvas>
+  `;
+  app.insertBefore(timelineDiv, app.children[2] || null);
+  // TPS chart
+  new Chart(document.getElementById('timeline-tps-chart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: timelineData.map(d=>d.ts.toLocaleString()),
+      datasets: [{
+        label: 'TPS',
+        data: timelineData.map(d=>d.tps),
+        borderColor: '#6ee7b7',
+        backgroundColor: 'rgba(110,231,183,0.2)',
+        tension: 0.2
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { min: 0, max: 25 } }
+    }
+  });
+  // Top 5 entity trends
+  const allCounts = {};
+  timelineData.forEach(d => {
+    d.entities.forEach(e => {
+      if (!allCounts[e.name]) allCounts[e.name] = Array(timelineData.length).fill(0);
+    });
+  });
+  timelineData.forEach((d, i) => {
+    d.entities.forEach(e => {
+      allCounts[e.name][i] = e.total;
+    });
+  });
+  const top5 = Object.entries(allCounts).sort((a,b)=>{
+    const sumA = a[1].reduce((x,y)=>x+y,0);
+    const sumB = b[1].reduce((x,y)=>x+y,0);
+    return sumB-sumA;
+  }).slice(0,5);
+  new Chart(document.getElementById('timeline-entity-chart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: timelineData.map(d=>d.ts.toLocaleString()),
+      datasets: top5.map(([name,counts],i)=>({
+        label: capitalize(name),
+        data: counts,
+        borderColor: ['#60a5fa','#6ee7b7','#fbbf24','#f472b6','#a78bfa'][i%5],
+        backgroundColor: 'rgba(96,165,250,0.1)',
+        tension: 0.2
+      }))
+    },
+    options: {
+      plugins: { legend: { display: true } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
 }
 
 function addFileSectionInteractivity() {
