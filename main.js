@@ -180,7 +180,21 @@ function renderFiles(fileDataArr) {
     document.getElementById('merge-files-btn').addEventListener('click', () => {
       // Merge all entity rows from all files
       let mergedRows = [];
-      fileDataArr.forEach(f => mergedRows = mergedRows.concat(f.data));
+      let tpsValues = [];
+      fileDataArr.forEach(f => {
+        // Extract TPS and filter out TPS lines from entity rows
+        f.data.forEach(row => {
+          if (row[0] && row[0].toUpperCase() === 'TPS') {
+            if (!isNaN(parseFloat(row[1]))) tpsValues.push(parseFloat(row[1]));
+          } else {
+            mergedRows.push(row);
+          }
+        });
+      });
+      // Calculate average TPS
+      let avgTPS = tpsValues.length ? (tpsValues.reduce((a, b) => a + b, 0) / tpsValues.length).toFixed(2) : '?';
+      // Add a single averaged TPS line at the top
+      mergedRows.unshift(['TPS', avgTPS, 0, 0, 0, 0, 0]);
       // Use a custom name for the merged file
       const mergedFileName = 'Pegasus_Merged_Entities.csv';
       const mergedFile = [{
