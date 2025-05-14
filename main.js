@@ -181,12 +181,15 @@ function renderFiles(fileDataArr) {
       // Merge all entity rows from all files
       let mergedRows = [];
       fileDataArr.forEach(f => mergedRows = mergedRows.concat(f.data));
-      // Use the name of the first file + ' (merged)'
+      // Use a custom name for the merged file
+      const mergedFileName = 'Pegasus_Merged_Entities.csv';
       const mergedFile = [{
-        name: fileDataArr[0].name + ' (merged)',
+        name: mergedFileName,
         data: mergedRows
       }];
       renderFiles(mergedFile);
+      // Add export button for merged file
+      setTimeout(() => addExportButton(mergedRows, mergedFileName), 0);
     });
   }
 
@@ -194,6 +197,7 @@ function renderFiles(fileDataArr) {
   fileDataArr.forEach((fileData, idx) => {
     const tps = extractTPS(fileData.data);
     const entities = groupEntities(fileData.data);
+    // --- Search bar ---
     const section = document.createElement('section');
     section.className = 'file-section';
     section.innerHTML = `
@@ -202,10 +206,13 @@ function renderFiles(fileDataArr) {
         <span class="tps">TPS: <b>${tps}</b></span>
         <span class="toggle-btn" style="margin-left:auto;cursor:pointer;" title="Collapse"><i class="fa fa-chevron-up"></i></span>
       </div>
-      <ul class="entity-list">
+      <div class="search-bar">
+        <input type="text" placeholder="Search entities..." data-file-idx="${idx}" class="entity-search-input" autocomplete="off" />
+      </div>
+      <ul class="entity-list" id="entity-list-${idx}">
         ${entities.map((g, i) => `
-          <li class="entity-group" data-idx="${idx}" data-entity="${i}">
-            <span>${capitalize(g.name)} <span style="opacity:0.7;font-size:0.95em;">(${g.type})</span></span>
+          <li class="entity-group" data-idx="${idx}" data-entity="${i}" tabindex="0">
+            <span><span class="entity-dot ${g.type ? g.type.toLowerCase() : 'other'}"></span>${capitalize(g.name)} <span style="opacity:0.7;font-size:0.95em;">(${g.type})</span></span>
             <span>x${g.total} <i class="fa fa-chevron-down" style="margin-left:0.5em;font-size:0.9em;"></i></span>
             <div class="entity-details" id="details-${idx}-${i}">
               <ul>
@@ -220,6 +227,7 @@ function renderFiles(fileDataArr) {
   });
   addFileSectionInteractivity();
   addEntityGroupInteractivity();
+  addEntitySearchInteractivity();
 }
 
 function addFileSectionInteractivity() {
@@ -252,8 +260,47 @@ function addEntityGroupInteractivity() {
   });
 }
 
+function addEntitySearchInteractivity() {
+  document.querySelectorAll('.entity-search-input').forEach(input => {
+    input.addEventListener('input', function() {
+      const idx = this.getAttribute('data-file-idx');
+      const filter = this.value.trim().toLowerCase();
+      const list = document.getElementById('entity-list-' + idx);
+      if (!list) return;
+      Array.from(list.children).forEach(li => {
+        const name = li.querySelector('span').innerText.toLowerCase();
+        li.style.display = name.includes(filter) ? '' : 'none';
+      });
+    });
+  });
+}
+
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function addExportButton(rows, filename) {
+  let exportDiv = document.createElement('div');
+  exportDiv.style.display = 'flex';
+  exportDiv.style.justifyContent = 'center';
+  exportDiv.style.margin = '0 0 2em 0';
+  exportDiv.innerHTML = `
+    <button class="animated-btn upload-btn-centered" id="export-merged-btn" style="background:linear-gradient(90deg,#60a5fa 60%,#6ee7b7 100%);color:#1e2527;">
+      <i class="fa fa-download"></i>
+      <span style="margin-left:0.5em;">Export Merged CSV</span>
+    </button>
+  `;
+  app.insertBefore(exportDiv, app.children[1] || null);
+  document.getElementById('export-merged-btn').addEventListener('click', () => {
+    let csvContent = rows.map(row => row.join(",")).join("\r\n");
+    let blob = new Blob([csvContent], { type: 'text/csv' });
+    let link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
 }
 
 // Initial render

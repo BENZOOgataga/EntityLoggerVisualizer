@@ -185,6 +185,13 @@ hr {
   cursor: pointer;
   font-size: 1.1em;
   margin-bottom: 1em;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #232a2d;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
 }
 .file-header .filename {
   font-weight: bold;
@@ -194,6 +201,28 @@ hr {
   font-size: 0.95em;
   color: #6ee7b7;
   margin-left: 1.5em;
+}
+
+.search-bar {
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto 1.2em auto;
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+}
+.search-bar input[type="text"] {
+  flex: 1;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  border: 1px solid #232a2d;
+  background: #1e2527;
+  color: #e0e6e6;
+  font-size: 1em;
+  transition: border-color 0.2s;
+}
+.search-bar input[type="text"]:focus {
+  border-color: #60a5fa;
 }
 
 .entity-list {
@@ -212,11 +241,35 @@ hr {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
 }
 .entity-group:hover {
   background: #60a5fa;
   color: #1e2527;
   box-shadow: 0 0 8px 1px #60a5fa;
+}
+.entity-group:focus {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+.entity-dot {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 50%;
+  margin-right: 0.7em;
+  vertical-align: middle;
+  background: #60a5fa;
+}
+.entity-dot.entity {
+  background: #60a5fa;
+}
+.entity-dot.item {
+  background: #6ee7b7;
+}
+.entity-dot.other {
+  background: #fbbf24;
 }
 
 .entity-details {
