@@ -152,7 +152,7 @@ hr {
   text-align: center;
   background: rgba(30, 37, 39, 0.7);
   cursor: pointer;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition: border-color 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s cubic-bezier(0.4,0,0.2,1), background 0.3s cubic-bezier(0.4,0,0.2,1);
   margin: 1.5em auto 0 auto;
   max-width: 350px;
   min-width: 220px;
@@ -165,7 +165,7 @@ hr {
 .upload-area:hover, .upload-area.dragover {
   border-color: #6ee7b7;
   box-shadow: 0 0 16px 2px #6ee7b7;
-  animation: pulse 1.2s infinite alternate;
+  animation: pulse 1.2s cubic-bezier(0.4,0,0.2,1) infinite alternate;
 }
 
 @keyframes pulse {
@@ -186,6 +186,7 @@ hr {
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
   box-shadow: 0 2px 8px 0 rgba(96, 165, 250, 0.08);
+  transition: background 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);
 }
 .animated-btn:hover {
   transform: scale(1.06);
@@ -208,11 +209,13 @@ hr {
   font-weight: 600;
   letter-spacing: 0.01em;
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  transition: background 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);
 }
 .animated-btn.upload-btn-centered:hover {
   background: linear-gradient(90deg, #6ee7b7 60%, #60a5fa 100%);
   transform: scale(1.04);
   box-shadow: 0 0 12px 2px #6ee7b7;
+  transition: background 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s cubic-bezier(0.4,0,0.2,1);
 }
 .animated-btn.upload-btn-centered i {
   font-size: 1.1em;
@@ -410,4 +413,12 @@ hr {
 button#restore-session-btn, button#clear-session-btn {
   min-width: 160px;
   margin: 0 0.5em;
+}
+
+.welcome-logo img {
+  transition: transform 0.5s cubic-bezier(0.4,0,0.2,1), box-shadow 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.welcome-logo img:hover {
+  transform: scale(1.08) rotate(-2deg);
+  box-shadow: 0 4px 32px 0 #60a5fa44;
 }
