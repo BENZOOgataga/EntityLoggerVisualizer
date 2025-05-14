@@ -1,3 +1,6 @@
+html, body {
+  height: 100%;
+}
 body {
   background: #1e2527;
   color: #e0e6e6;
@@ -11,6 +14,30 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+}
+
+footer {
+  flex-shrink: 0;
+  width: 100%;
+  text-align: center;
+  padding: 1.5em 0 2.5em 0; /* Increased bottom padding for visibility above taskbar */
+  font-size: 1em;
+  opacity: 0.8;
+  letter-spacing: 0.01em;
+  background: transparent;
+  position: relative;
+  bottom: 0;
 }
 
 * {
@@ -171,6 +198,8 @@ hr {
   max-width: 700px;
   box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.12);
   transition: box-shadow 0.2s;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 .file-section.collapsed {
   max-height: 3.5em;
@@ -336,6 +365,8 @@ hr {
   max-width: 700px;
   box-shadow: 0 2px 16px 0 rgba(0,0,0,0.12);
   transition: box-shadow 0.2s;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 .timeline-section h2 {
   color: #60a5fa;
@@ -354,6 +385,8 @@ button#restore-session-btn, button#clear-session-btn {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  max-height: 100vh;
+  overflow: auto;
 }
 
 .welcome {
@@ -366,6 +399,8 @@ button#restore-session-btn, button#clear-session-btn {
   margin-right: auto;
   padding-left: 1.5em;
   padding-right: 1.5em;
+  max-height: 100vh;
+  overflow: auto;
 }
 .welcome .fa {
   font-size: 3em;
